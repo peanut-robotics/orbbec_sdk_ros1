@@ -51,7 +51,9 @@
     <arg name="enable_pipeline" default="true"/>
     <arg name="enable_ldp" default="true"/>
     <!-- Configure the path for depth filter file, for example: /config/depthfilter/Gemini2_v1.7.json -->
-    <arg name="depth_filter_config" default="" />
+    <!-- <arg name="depth_filter_config" default="" /> -->
+    <!-- <arg name="depth_filter_config" default="$(find orbbec_camera)/config/depthfilter/Gemini2_v1.7.json" /> -->
+    <arg name="depth_filter_config" default="$(find orbbec_camera)/config/depthfilter/Openni_device.json" />
     <arg name="sync_mode" default="free_run"/>
     <arg name="depth_delay_us" default="0"/>
     <arg name="color_delay_us" default="0"/>
