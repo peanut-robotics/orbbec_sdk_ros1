@@ -218,6 +218,10 @@ macro(add_orbbec_executable TARGET SOURCES)
   add_executable(${TARGET} ${SOURCES})
   target_link_libraries(${TARGET} ${COMMON_LINK_LIBRARIES} ${PROJECT_NAME})
   target_include_directories(${TARGET} PUBLIC ${COMMON_INCLUDE_DIRS})
+
+  install(TARGETS ${TARGET}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
 endmacro()
 
 # Add nodes
