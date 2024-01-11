@@ -14,6 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 #include "orbbec_camera/ob_camera_node.h"
+#include "orbbec_camera/ob_camera_node_driver.h"
 
 namespace orbbec_camera {
 
@@ -214,6 +215,11 @@ void OBCameraNode::setupCameraCtrlServices() {
       [this](SetStringRequest& request, SetStringResponse& response) {
         response.success = this->switchIRDataSourceChannelCallback(request, response);
         return response.success;
+      });
+  reboot_depthcam_srv_ = nh_.advertiseService<std_srvs::EmptyRequest, std_srvs::EmptyResponse>(
+      "/" + camera_name_ + "/" + "reboot_depthcam",
+      [this](std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
+        return this->rebootCameraCallback(request, response);
       });
 }
 
@@ -752,4 +758,30 @@ bool OBCameraNode::switchIRDataSourceChannelCallback(SetStringRequest& request,
   }
   return false;
 }
+
+bool OBCameraNode::rebootCameraCallback(std_srvs::EmptyRequest& request,
+                                        std_srvs::EmptyResponse& response) {
+  (void)request;
+  (void)response;
+  std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  try {
+    if (!device_) {
+      ROS_ERROR_STREAM("Camera is not connected.");
+      return false;
+    }
+    device_->reboot();
+    device_.reset();
+
+  } catch (const ob::Error& e) {
+    std::string errorName = e.getName();
+    // Check if the error is the expected "reboot" error
+    if (errorName.find("reboot") != std::string::npos) {
+      ROS_INFO_STREAM("Reboot process initiated");
+    } else {
+      ROS_ERROR_STREAM("Failed to reboot camera: " << e.getMessage() << " " << e.getName());
+      return false;
+    }
+  }
+  return true;
+ }
 }  // namespace orbbec_camera
