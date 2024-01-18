@@ -841,7 +841,7 @@ bool OBCameraNode::decodeColorFrameToBuffer(const std::shared_ptr<ob::Frame>& fr
   if (!is_decoded) {
     auto video_frame = softwareDecodeColorFrame(frame);
     if (!video_frame) {
-      ROS_ERROR_STREAM("Decode frame failed");
+      ROS_ERROR_STREAM_THROTTLE(1, "Decode frame failed");
       return false;
     }
     CHECK_NOTNULL(rgb_buffer_);
@@ -956,12 +956,12 @@ std::shared_ptr<ob::Frame> OBCameraNode::softwareDecodeColorFrame(
     return frame;
   }
   if (!setupFormatConvertType(frame->format())) {
-    ROS_ERROR_STREAM("Unsupported color format: " << frame->format());
+    ROS_ERROR_STREAM_THROTTLE(1, "Unsupported color format: " << frame->format());
     return nullptr;
   }
   auto covert_frame = format_convert_filter_.process(frame);
   if (covert_frame == nullptr) {
-    ROS_ERROR_STREAM("Format " << frame->format() << " convert to RGB888 failed");
+    ROS_ERROR_STREAM_THROTTLE(1, "Format " << frame->format() << " convert to RGB888 failed");
     return nullptr;
   }
   return covert_frame;
@@ -1042,7 +1042,7 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
     image.create(height, width, image_format_[stream_index]);
   }
   if (frame->type() == OB_FRAME_COLOR && !rgb_is_decoded_) {
-    ROS_ERROR_STREAM("frame is not decoded");
+    ROS_ERROR_STREAM_THROTTLE(1, "frame is not decoded");
     return;
   }
   if (frame->type() == OB_FRAME_COLOR) {
