@@ -92,7 +92,7 @@ void OBCameraNode::setupDevices() {
   {
     imuPipeline_ = std::make_shared<ob::Pipeline>(device_);
   }
-  
+
   try {
     if (enable_hardware_d2d_ && device_info_->pid() == GEMINI2_PID) {
       device_->setBoolProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
@@ -244,10 +244,10 @@ void OBCameraNode::setupProfiles() {
 }
 
 void OBCameraNode::setupTopics() {
-  setupPublishers();
   if (publish_tf_) {
     publishStaticTransforms();
   }
+  setupPublishers();
 }
 
 void OBCameraNode::setupPublishers() {

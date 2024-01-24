@@ -190,6 +190,7 @@ void OBCameraNode::getParameters() {
 
 void OBCameraNode::startStreams() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  ROS_INFO_STREAM("Starting camera streams: startStreams");
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_.get());
     if (enable_frame_sync_) {
@@ -402,6 +403,7 @@ void OBCameraNode::startIMU() {
 }
 
 void OBCameraNode::stopStreams() {
+  ROS_INFO_STREAM("stopStreams: Stopping Camera Streams");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_.get());
@@ -446,6 +448,7 @@ void OBCameraNode::stopIMU() {
 
 void OBCameraNode::startStream(const stream_index_pair& stream_index) {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+  ROS_INFO_STREAM("start stream for camera: startStream");
   if (enable_pipeline_) {
     ROS_WARN_STREAM("Cannot start stream when pipeline is enabled");
     return;
@@ -1116,11 +1119,15 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
 }
 
 void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index) {
+  if(!is_initialized_)
+  {
+    return;
+  }
   ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " subscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     if (pipeline_started_) {
-      ROS_INFO_STREAM("pipe line already started");
+      ROS_INFO_STREAM("pipe line already started, skipping stream start for " << stream_name_[stream_index]);
       return;
     }
     try {
@@ -1142,6 +1149,10 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
 }
 
 void OBCameraNode::imuSubscribedCallback(const orbbec_camera::stream_index_pair& stream_index) {
+  if(!is_initialized_)
+  {
+    return;
+  }
   ROS_INFO_STREAM("IMU stream " << stream_name_[stream_index] << " subscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
@@ -1168,6 +1179,10 @@ void OBCameraNode::imuSubscribedCallback(const orbbec_camera::stream_index_pair&
 }
 
 void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_index) {
+  if(!is_initialized_)
+  {
+    return;
+  }
   ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " unsubscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
@@ -1193,6 +1208,7 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
       }
     }
     if (all_stream_no_subscriber) {
+      ROS_INFO_STREAM("There are no subscribers to the streams, stopping streams");
       stopStreams();
     }
   } else {
@@ -1208,6 +1224,10 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
 }
 
 void OBCameraNode::imuUnsubscribedCallback(const stream_index_pair& stream_index) {
+  if(!is_initialized_)
+  {
+    return;
+  }
   if (enable_sync_output_accel_gyro_) {
     ROS_INFO_STREAM("IMU stream accel and gyro unsubscribed");
   } else {
@@ -1359,6 +1379,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   for (int i = 0; i < 3; i++) {
     trans[i] = ex.trans[i];
   }
+
   stopStreams();
 
   auto tf_timestamp = ros::Time::now();
