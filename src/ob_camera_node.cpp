@@ -45,6 +45,7 @@ void OBCameraNode::init() {
   is_running_ = true;
   setupConfig();
   getParameters();
+  ROS_WARN("XXX OBCameraNode::init %s", camera_name_.c_str());
   setupDevices();
   setupProfiles();
   setupCameraInfo();
@@ -62,11 +63,13 @@ void OBCameraNode::init() {
 #endif
   rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 3];
   rgb_is_decoded_ = false;
+  ROS_WARN("XXX OBCameraNode::init %s - DONE", camera_name_.c_str());
 }
 
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
 
 OBCameraNode::~OBCameraNode() {
+  ROS_WARN("XXX ~OBCameraNode %s", camera_name_.c_str());
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() start");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   is_running_ = false;
@@ -621,7 +624,8 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   auto color_width = color_frame->width();
   auto color_height = color_frame->height();
   if (depth_width != color_width || depth_height != color_height) {
-    ROS_ERROR_STREAM("depth frame size is not equal to color frame size");
+    ROS_ERROR("depth frame size %d %d is not equal to color frame size %d %d",
+      depth_width, depth_height, color_width, color_height);
     return;
   }
   CHECK_NOTNULL(pipeline_.get());
@@ -881,6 +885,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(const std::shared_ptr
 }
 
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
+  ROS_WARN("XXX onNewFrameSetCallback %s %d", camera_name_.c_str(), static_cast<int>(is_running_));
   if (!is_running_) {
     // is_running_ is false means the node is shutting down
     return;
@@ -931,6 +936,7 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
 }
 
 void OBCameraNode::onNewColorFrameCallback() {
+  ROS_WARN("XXX onNewColorFrameCallback %s %d", camera_name_.c_str(), static_cast<int>(is_running_));
   while (enable_stream_[COLOR] && ros::ok() && is_running_.load()) {
     std::unique_lock<std::mutex> lock(colorFrameMtx_);
     colorFrameCV_.wait(lock,
