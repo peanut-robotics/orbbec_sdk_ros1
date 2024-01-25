@@ -342,6 +342,7 @@ void OBCameraNode::setupPipelineConfig() {
   }
   for (const auto& stream_index : IMAGE_STREAMS) {
     if (enable_stream_[stream_index]) {
+      ROS_INFO_STREAM("config enableStream: " << stream_name_[stream_index]);
       pipeline_config_->enableStream(stream_profile_[stream_index]);
     }
   }
