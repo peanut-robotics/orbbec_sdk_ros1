@@ -205,7 +205,9 @@ void OBCameraNode::startStreams() {
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
         CHECK_NOTNULL(frame_set.get());
+        ROS_WARN_THROTTLE(1, "XXX calling");
         this->onNewFrameSetCallback(frame_set);
+        ROS_WARN_THROTTLE(1, "XXX called");
       });
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("failed to start pipeline: " << e.getMessage()
@@ -221,6 +223,7 @@ void OBCameraNode::startStreams() {
       throw;
     }
 
+    colorFrameThread_.reset();
     if (!colorFrameThread_ && enable_stream_[COLOR]) {
       ROS_INFO_STREAM("Create color frame read thread.");
       colorFrameThread_ = std::make_shared<std::thread>([this]() { onNewColorFrameCallback(); });
@@ -1410,6 +1413,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   quaternion_optical.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
   tf2::Vector3 zero_trans(0, 0, 0);
   tf2::Vector3 trans(0, 0, 0);
+  ROS_WARN_STREAM("calcAndPublishStaticTransform - STARTING");
   startStreams();
   CHECK_NOTNULL(pipeline_.get());
   auto camera_param = pipeline_->getCameraParam();
