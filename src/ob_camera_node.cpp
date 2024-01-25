@@ -226,7 +226,7 @@ void OBCameraNode::startStreams() {
     }
 
     if (colorFrameThread_) {
-      colorFrameThread_.reset();
+      // crashes? colorFrameThread_.reset();
     }
     if (!colorFrameThread_ && enable_stream_[COLOR]) {
       ROS_INFO_STREAM("Create color frame read thread.");
