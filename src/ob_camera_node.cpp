@@ -55,7 +55,6 @@ void OBCameraNode::init() {
   readDefaultExposure();
   readDefaultGain();
   readDefaultWhiteBalance();
-  is_initialized_ = true;
 #if defined(USE_RK_HW_DECODER)
   mjpeg_decoder_ = std::make_shared<RKMjpegDecoder>(width_[COLOR], height_[COLOR]);
 #elif defined(USE_NV_HW_DECODER)
@@ -64,6 +63,7 @@ void OBCameraNode::init() {
   rgb_buffer_ = new uint8_t[width_[COLOR] * height_[COLOR] * 3];
   rgb_is_decoded_ = false;
   ROS_WARN("XXX OBCameraNode::init %s - DONE", camera_name_.c_str());
+  is_initialized_ = true;
 }
 
 bool OBCameraNode::isInitialized() const { return is_initialized_; }
@@ -777,6 +777,10 @@ void OBCameraNode::onNewIMUFrameSyncOutputCallback(const std::shared_ptr<ob::Fra
 
 void OBCameraNode::onNewIMUFrameCallback(const std::shared_ptr<ob::Frame>& frame,
                                          const stream_index_pair& stream_index) {
+  if (!is_initialized_) {
+    ROS_WARN("onNewIMUFrameCallback not initialized");
+    return;
+  }
   if (!imu_publishers_.count(stream_index)) {
     ROS_ERROR_STREAM("stream " << stream_name_[stream_index] << " publisher not initialized");
     return;
@@ -885,7 +889,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(const std::shared_ptr
 }
 
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
-  ROS_WARN("XXX onNewFrameSetCallback %s %d", camera_name_.c_str(), static_cast<int>(is_running_));
+  // ROS_WARN("XXX onNewFrameSetCallback %s %d", camera_name_.c_str(), static_cast<int>(is_running_));
   if (!is_running_) {
     // is_running_ is false means the node is shutting down
     return;
@@ -936,7 +940,7 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
 }
 
 void OBCameraNode::onNewColorFrameCallback() {
-  ROS_WARN("XXX onNewColorFrameCallback %s %d", camera_name_.c_str(), static_cast<int>(is_running_));
+  // ROS_WARN("XXX onNewColorFrameCallback %s %d", camera_name_.c_str(), static_cast<int>(is_running_));
   while (enable_stream_[COLOR] && ros::ok() && is_running_.load()) {
     std::unique_lock<std::mutex> lock(colorFrameMtx_);
     colorFrameCV_.wait(lock,
@@ -1122,6 +1126,10 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
 }
 
 void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index) {
+  if (!is_initialized_) {
+    ROS_WARN("imageSubscribedCallback not initialized");
+    return;
+  }
   ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " subscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
@@ -1148,6 +1156,10 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
 }
 
 void OBCameraNode::imuSubscribedCallback(const orbbec_camera::stream_index_pair& stream_index) {
+  if (!is_initialized_) {
+    ROS_WARN("imuSubscribedCallback not initialized");
+    return;
+  }
   ROS_INFO_STREAM("IMU stream " << stream_name_[stream_index] << " subscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
@@ -1174,6 +1186,10 @@ void OBCameraNode::imuSubscribedCallback(const orbbec_camera::stream_index_pair&
 }
 
 void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_index) {
+  if (!is_initialized_) {
+    ROS_WARN("imageUnsubscribedCallback not initialized");
+    return;
+  }
   ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " unsubscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
@@ -1214,6 +1230,10 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
 }
 
 void OBCameraNode::imuUnsubscribedCallback(const stream_index_pair& stream_index) {
+  if (!is_initialized_) {
+    ROS_WARN("imuUnsubscribedCallback not initialized");
+    return;
+  }
   if (enable_sync_output_accel_gyro_) {
     ROS_INFO_STREAM("IMU stream accel and gyro unsubscribed");
   } else {
@@ -1224,11 +1244,19 @@ void OBCameraNode::imuUnsubscribedCallback(const stream_index_pair& stream_index
 }
 
 void OBCameraNode::pointCloudSubscribedCallback() {
+  if (!is_initialized_) {
+    ROS_WARN("pointCloudSubscribedCallback not initialized");
+    return;
+  }
   ROS_INFO_STREAM("point cloud subscribed");
   imageSubscribedCallback(DEPTH);
 }
 
 void OBCameraNode::pointCloudUnsubscribedCallback() {
+  if (!is_initialized_) {
+    ROS_WARN("pointCloudUnsubscribedCallback not initialized");
+    return;
+  }
   ROS_INFO_STREAM("point cloud unsubscribed");
   if (depth_cloud_pub_.getNumSubscribers() > 0) {
     return;
@@ -1237,12 +1265,20 @@ void OBCameraNode::pointCloudUnsubscribedCallback() {
 }
 
 void OBCameraNode::coloredPointCloudSubscribedCallback() {
+  if (!is_initialized_) {
+    ROS_WARN("coloredPointCloudSubscribedCallback not initialized");
+    return;
+  }
   ROS_INFO_STREAM("rgb point cloud subscribed");
   imageSubscribedCallback(DEPTH);
   imageSubscribedCallback(COLOR);
 }
 
 void OBCameraNode::coloredPointCloudUnsubscribedCallback() {
+  if (!is_initialized_) {
+    ROS_WARN("coloredPointCloudUnsubscribedCallback not initialized");
+    return;
+  }
   ROS_INFO_STREAM("point cloud unsubscribed");
   if (depth_registered_cloud_pub_.getNumSubscribers() > 0) {
     return;
