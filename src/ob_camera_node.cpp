@@ -226,6 +226,7 @@ void OBCameraNode::startStreams() {
       colorFrameThread_ = std::make_shared<std::thread>([this]() { onNewColorFrameCallback(); });
     }
     pipeline_started_ = true;
+    ROS_WARN("XXX pipeline started");
   } else {
     for (const auto& stream_index : IMAGE_STREAMS) {
       if (enable_stream_[stream_index] && !stream_started_[stream_index]) {
@@ -525,6 +526,7 @@ void OBCameraNode::publishPointCloud(const std::shared_ptr<ob::FrameSet>& frame_
 
 void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
   if (depth_cloud_pub_.getNumSubscribers() == 0 || !enable_point_cloud_) {
+    ROS_INFO_STREAM_THROTTLE(1, "XXX not publish depth cloud " << depth_cloud_pub_.getNumSubscribers() << " " << enable_point_cloud_ << " " << enable_colored_point_cloud_);
     return;
   }
 
@@ -596,6 +598,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
   cloud_msg_.height = 1;
   modifier.resize(valid_count);
   depth_cloud_pub_.publish(cloud_msg_);
+  ROS_INFO_THROTTLE(1, "XXX publish depth cloud");
   if (save_point_cloud_) {
     save_point_cloud_ = false;
     auto now = std::time(nullptr);
@@ -613,6 +616,7 @@ void OBCameraNode::publishDepthPointCloud(const std::shared_ptr<ob::FrameSet>& f
 
 void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>& frame_set) {
   if (depth_registered_cloud_pub_.getNumSubscribers() == 0 || !enable_colored_point_cloud_) {
+    ROS_INFO_STREAM_THROTTLE(1, "XXX not publish colored cloud " << depth_cloud_pub_.getNumSubscribers() << " " << enable_point_cloud_ << " " << enable_colored_point_cloud_);
     return;
   }
   auto depth_frame = frame_set->depthFrame();
@@ -693,6 +697,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   }
 
   if (valid_count == 0) {
+    ROS_WARN_THROTTLE(1, "XXX invalid cloud");
     return;
   }
   auto timestamp = frameTimeStampToROSTime(depth_frame->systemTimeStamp());
@@ -703,6 +708,7 @@ void OBCameraNode::publishColoredPointCloud(const std::shared_ptr<ob::FrameSet>&
   cloud_msg_.height = 1;
   modifier.resize(valid_count);
   depth_registered_cloud_pub_.publish(cloud_msg_);
+  ROS_INFO_THROTTLE(1, "XXX publish colored cloud");
   if (save_colored_point_cloud_) {
     save_colored_point_cloud_ = false;
     auto now = std::time(nullptr);
@@ -1135,7 +1141,7 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     if (pipeline_started_) {
-      ROS_INFO_STREAM("pipe line already started");
+      ROS_INFO_STREAM("XXX pipe line already started");
       return;
     }
     try {
@@ -1195,7 +1201,7 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     if (!pipeline_started_) {
-      ROS_INFO_STREAM("imageUnsubscribedCallback pipe line not start");
+      ROS_INFO_STREAM("XXX imageUnsubscribedCallback pipe line not start");
       return;
     }
     bool all_stream_no_subscriber = true;
