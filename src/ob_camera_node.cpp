@@ -896,12 +896,14 @@ std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(const std::shared_ptr
 }
 
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
-  // ROS_WARN("XXX onNewFrameSetCallback %s %d", camera_name_.c_str(), static_cast<int>(is_running_));
+  ROS_WARN_THROTTLE(1, "XXX onNewFrameSetCallback %s %d", camera_name_.c_str(), static_cast<int>(is_running_));
   if (!is_running_) {
     // is_running_ is false means the node is shutting down
+    ROS_WARN_THROTTLE(1, "XXX not running");
     return;
   }
   if (frame_set == nullptr) {
+    ROS_WARN_THROTTLE(1, "XXX nullptr");
     return;
   }
   try {
@@ -911,8 +913,10 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
       std::lock_guard<std::mutex> colorLock(colorFrameMtx_);
       colorFrameQueue_.push(frame_set);
       colorFrameCV_.notify_all();
+      ROS_INFO_THROTTLE(1, "XXX push color frame");
     }
     else {
+      ROS_INFO_THROTTLE(1, "XXX publish point cloud");
       publishPointCloud(frame_set);
     }
 
@@ -947,14 +951,19 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
 }
 
 void OBCameraNode::onNewColorFrameCallback() {
-  // ROS_WARN("XXX onNewColorFrameCallback %s %d", camera_name_.c_str(), static_cast<int>(is_running_));
+  ROS_WARN_THROTTLE(1, "XXX onNewColorFrameCallback %s %d", camera_name_.c_str(), static_cast<int>(is_running_));
   while (enable_stream_[COLOR] && ros::ok() && is_running_.load()) {
+    ROS_INFO_STREAM_THROTTLE(1, "Waiting for color frame...");
     std::unique_lock<std::mutex> lock(colorFrameMtx_);
     colorFrameCV_.wait(lock,
                        [this]() { return !colorFrameQueue_.empty() || !(is_running_.load()); });
 
     if (!ros::ok() || !is_running_.load()) {
+      ROS_WARN_STREAM_THROTTLE(1, "XXX break " << ros::ok() << " " << is_running_.load());
       break;
+    }
+    else {
+      ROS_WARN_THROTTLE(1, "XXX got color frame - will publish point cloud");
     }
 
     std::shared_ptr<ob::FrameSet> frameSet = colorFrameQueue_.front();
@@ -989,8 +998,11 @@ void OBCameraNode::onNewFrameCallback(const std::shared_ptr<ob::Frame>& frame,
   if (frame == nullptr) {
     return;
   }
-  bool has_subscriber = image_publishers_[stream_index].getNumSubscribers() > 0;
-  if (camera_info_publishers_[stream_index].getNumSubscribers() > 0) {
+  auto image_sub_count = image_publishers_[stream_index].getNumSubscribers();
+  bool has_subscriber = image_sub_count > 0;
+  auto camera_sub_count = camera_info_publishers_[stream_index].getNumSubscribers();
+  ROS_INFO_THROTTLE(1, "XXX onNewFrameCallback %s %d %d %d", camera_name_.c_str(), static_cast<int>(is_running_), image_sub_count, camera_sub_count);
+  if (camera_sub_count > 0) {
     has_subscriber = true;
   }
   if (!has_subscriber) {
