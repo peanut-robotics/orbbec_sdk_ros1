@@ -83,7 +83,7 @@ OBCameraNode::~OBCameraNode() {
     colorFrameThread_->join();
   }
 
-  ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() stop stream");
+  ROS_WARN_STREAM("OBCameraNode::~OBCameraNode() stop stream");
   stopStreams();
   ROS_INFO_STREAM("OBCameraNode::~OBCameraNode() delete rgb_buffer");
   delete[] rgb_buffer_;
@@ -410,6 +410,7 @@ void OBCameraNode::stopStreams() {
     CHECK_NOTNULL(pipeline_.get());
     pipeline_->stop();
     pipeline_started_ = false;
+    ROS_WARN("XXX stopStreams");
   } else {
     for (const auto& stream_index : IMAGE_STREAMS) {
       if (stream_started_[stream_index]) {
@@ -1215,6 +1216,7 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
       }
     }
     if (all_stream_no_subscriber) {
+      ROS_WARN_STREAM("STOPPING " << stream_name_[stream_index]);
       stopStreams();
     }
   } else {
@@ -1401,6 +1403,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   for (int i = 0; i < 3; i++) {
     trans[i] = ex.trans[i];
   }
+  ROS_WARN_STREAM("calcAndPublishStaticTransform - STOPPING");
   stopStreams();
 
   auto tf_timestamp = ros::Time::now();

@@ -555,6 +555,7 @@ bool OBCameraNode::toggleSensorCallback(std_srvs::SetBoolRequest& request,
 bool OBCameraNode::toggleSensor(const stream_index_pair& stream_index, bool enabled,
                                 std::string& msg) {
   (void)msg;
+  ROS_WARN_STREAM("toggleSensor STOPPING " << stream_name_[stream_index]);
   stopStreams();
   enable_stream_[stream_index] = enabled;
   startStreams();
