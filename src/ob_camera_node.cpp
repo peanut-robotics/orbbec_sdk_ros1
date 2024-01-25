@@ -223,6 +223,7 @@ void OBCameraNode::startStreams() {
       ROS_INFO_STREAM("Create color frame read thread.");
       colorFrameThread_ = std::make_shared<std::thread>([this]() { onNewColorFrameCallback(); });
     }
+    ROS_INFO_STREAM("startStreams: setting pipeline_started_ = true");
     pipeline_started_ = true;
   } else {
     for (const auto& stream_index : IMAGE_STREAMS) {
@@ -408,6 +409,7 @@ void OBCameraNode::stopStreams() {
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_.get());
     pipeline_->stop();
+    ROS_INFO_STREAM("stopStreams: Setting pipeline_started_ to false");
     pipeline_started_ = false;
   } else {
     for (const auto& stream_index : IMAGE_STREAMS) {
@@ -487,6 +489,7 @@ void OBCameraNode::startStream(const stream_index_pair& stream_index) {
 }
 
 void OBCameraNode::stopStream(const stream_index_pair& stream_index) {
+  ROS_INFO_STREAM("stop stream for camera: stopStream");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
     ROS_WARN_STREAM("Cannot stop stream when pipeline is enabled");
@@ -1119,6 +1122,7 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
 }
 
 void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index) {
+  ROS_INFO_STREAM("calling imageSubscribedCallback - Subscribing");
   if(!is_initialized_)
   {
     return;
@@ -1179,6 +1183,7 @@ void OBCameraNode::imuSubscribedCallback(const orbbec_camera::stream_index_pair&
 }
 
 void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_index) {
+  ROS_INFO_STREAM("calling imageUnsubscribedCallback - Unsubscribing");
   if(!is_initialized_)
   {
     return;
@@ -1199,11 +1204,13 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
     }
     if (enable_point_cloud_) {
       if (depth_cloud_pub_.getNumSubscribers() > 0) {
+        ROS_INFO_STREAM("There are more than zero depth cloud subscribers");
         all_stream_no_subscriber = false;
       }
     }
     if (enable_colored_point_cloud_) {
       if (depth_registered_cloud_pub_.getNumSubscribers() > 0) {
+        ROS_INFO_STREAM("There are more than zero depth registered cloud subscribers");
         all_stream_no_subscriber = false;
       }
     }
@@ -1368,6 +1375,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   quaternion_optical.setRPY(-M_PI / 2, 0.0, -M_PI / 2);
   tf2::Vector3 zero_trans(0, 0, 0);
   tf2::Vector3 trans(0, 0, 0);
+  ROS_INFO_STREAM("calcAndPublishStaticTransform calling - startStreams()");
   startStreams();
   CHECK_NOTNULL(pipeline_.get());
   auto camera_param = pipeline_->getCameraParam();
@@ -1379,7 +1387,7 @@ void OBCameraNode::calcAndPublishStaticTransform() {
   for (int i = 0; i < 3; i++) {
     trans[i] = ex.trans[i];
   }
-
+  ROS_INFO_STREAM("calcAndPublishStaticTransform calling - stopStreams()");
   stopStreams();
 
   auto tf_timestamp = ros::Time::now();

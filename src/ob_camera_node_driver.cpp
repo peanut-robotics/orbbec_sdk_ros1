@@ -244,6 +244,7 @@ void OBCameraNodeDriver::deviceConnectCallback(const std::shared_ptr<ob::DeviceL
     reset_device_cv_.notify_all();
   }
   ROS_INFO_STREAM("deviceConnectCallback : deviceConnectCallback end");
+
 }
 
 void OBCameraNodeDriver::checkConnectionTimer() {
