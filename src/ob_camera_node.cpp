@@ -190,7 +190,7 @@ void OBCameraNode::getParameters() {
 
 void OBCameraNode::startStreams() {
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
-  ROS_INFO_STREAM("Starting camera streams: startStreams");
+  ROS_INFO_STREAM("startStreams: Starting camera streams");
   if (enable_pipeline_) {
     CHECK_NOTNULL(pipeline_.get());
     if (enable_frame_sync_) {
@@ -200,8 +200,11 @@ void OBCameraNode::startStreams() {
       pipeline_->disableFrameSync();
     }
     try {
+      ROS_INFO_STREAM("startStreams: Setup Pipeline Config");
       setupPipelineConfig();
+      // ROS_INFO_STREAM("startStreams: Starting Pipeline");
       pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
+        ROS_INFO_STREAM("startStreams: In lambda function of starting piepline");
         CHECK_NOTNULL(frame_set.get());
         this->onNewFrameSetCallback(frame_set);
       });
@@ -212,6 +215,7 @@ void OBCameraNode::startStreams() {
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
         CHECK_NOTNULL(frame_set.get());
+        ROS_INFO_STREAM("startStreams: In lambda function of starting piepline but in the catch block of trying again");
         this->onNewFrameSetCallback(frame_set);
       });
     } catch (...) {
@@ -220,7 +224,7 @@ void OBCameraNode::startStreams() {
     }
 
     if (!colorFrameThread_ && enable_stream_[COLOR]) {
-      ROS_INFO_STREAM("Create color frame read thread.");
+      ROS_INFO_STREAM("startStreams: Create color frame read thread");
       colorFrameThread_ = std::make_shared<std::thread>([this]() { onNewColorFrameCallback(); });
     }
     ROS_INFO_STREAM("startStreams: setting pipeline_started_ = true");
@@ -887,22 +891,28 @@ std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(const std::shared_ptr
 }
 
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
+  ROS_INFO_STREAM("Entering onNewFrameSetCallback");
   if (!is_running_) {
+    ROS_INFO_STREAM("onNewFrameSetCallback: is_running_ is false, means the node is shutting down");
     // is_running_ is false means the node is shutting down
     return;
   }
   if (frame_set == nullptr) {
+    ROS_INFO_STREAM("onNewFrameSetCallback: frame_set is nullptr, return");
     return;
   }
   try {
     //rgb_is_decoded_ = decodeColorFrameToBuffer(frame_set->colorFrame(), rgb_buffer_);
+    ROS_INFO_STREAM("onNewFrameSetCallback: Recreate a thread to color frame data");
     std::shared_ptr<ob::ColorFrame> colorFrame = frame_set->colorFrame();
     if (enable_stream_[COLOR] && colorFrame){
+      ROS_INFO_STREAM("if color stream and colorFrame: onNewFrameSetCallback");
       std::lock_guard<std::mutex> colorLock(colorFrameMtx_);
       colorFrameQueue_.push(frame_set);
       colorFrameCV_.notify_all();
     }
     else {
+      ROS_INFO_STREAM("onNewFrameSetCallback: publishing point cloud");
       publishPointCloud(frame_set);
     }
 
@@ -937,10 +947,14 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
 }
 
 void OBCameraNode::onNewColorFrameCallback() {
+  ROS_INFO_STREAM("Entering onNewColorFrameCallback");
   while (enable_stream_[COLOR] && ros::ok() && is_running_.load()) {
+    // ROS_INFO_STREAM("onNewColorFrameCallback - I AM HERE 1");
     std::unique_lock<std::mutex> lock(colorFrameMtx_);
     colorFrameCV_.wait(lock,
                        [this]() { return !colorFrameQueue_.empty() || !(is_running_.load()); });
+    // ROS_INFO_STREAM("onNewColorFrameCallback - I AM HERE 2");
+
 
     if (!ros::ok() || !is_running_.load()) {
       break;
@@ -949,6 +963,7 @@ void OBCameraNode::onNewColorFrameCallback() {
     std::shared_ptr<ob::FrameSet> frameSet = colorFrameQueue_.front();
     rgb_is_decoded_ = decodeColorFrameToBuffer(frameSet->colorFrame(), rgb_buffer_);
     publishPointCloud(frameSet);
+    // ROS_INFO_STREAM("onNewColorFrameCallback - I AM HERE 3");
     onNewFrameCallback(frameSet->colorFrame(), IMAGE_STREAMS.at(2));
     colorFrameQueue_.pop();
   }
