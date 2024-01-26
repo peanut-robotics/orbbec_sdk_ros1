@@ -144,6 +144,7 @@ void OBCameraNode::getParameters() {
   enable_soft_filter_ = nh_private_.param<bool>("enable_soft_filter", true);
   enable_color_auto_exposure_ = nh_private_.param<bool>("enable_color_auto_exposure", true);
   enable_ir_auto_exposure_ = nh_private_.param<bool>("enable_ir_auto_exposure", true);
+  enable_ir_long_exposure_ = nh_private_.param<bool>("enable_ir_long_exposure", false);
   sync_mode_str_ = nh_private_.param<std::string>("sync_mode", "free_run");
   std::transform(sync_mode_str_.begin(), sync_mode_str_.end(), sync_mode_str_.begin(), ::toupper);
   sync_mode_ = OBSyncModeFromString(sync_mode_str_);
@@ -262,11 +263,14 @@ void OBCameraNode::startIMUSyncStream() {
   std::shared_ptr<ob::Config> imuConfig = std::make_shared<ob::Config>();
   imuConfig->enableStream(accelProfile);
   imuConfig->enableStream(gyroProfile);
+  imuPipeline_->enableFrameSync();
   imuPipeline_->start(imuConfig, [&](std::shared_ptr<ob::Frame> frame) {
     auto frameSet = frame->as<ob::FrameSet>();
     auto aFrame = frameSet->getFrame(OB_FRAME_ACCEL);
     auto gFrame = frameSet->getFrame(OB_FRAME_GYRO);
-    onNewIMUFrameSyncOutputCallback(aFrame, gFrame);
+    if(aFrame && gFrame) {
+      onNewIMUFrameSyncOutputCallback(aFrame, gFrame);
+    }
   });
 
   imu_sync_output_start_ = true;
@@ -274,7 +278,7 @@ void OBCameraNode::startIMUSyncStream() {
     ROS_ERROR_STREAM(
         "Failed to start IMU stream, please check the imu_rate and imu_range parameters.");
   } else {
-    ROS_ERROR_STREAM(
+    ROS_INFO_STREAM(
         "start accel stream with range: "
         << fullAccelScaleRangeToString(accel_range) << ",rate:" << sampleRateToString(accel_rate)
         << ", and start gyro stream with range:" << fullGyroScaleRangeToString(gyro_range)

@@ -1,5 +1,5 @@
 # Orbbec ROS SDK
-[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.4.2-green)
+[![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges) ![version](https://img.shields.io/badge/version-1.4.5-green)
 
 Orbbec ROS SDK is a wrapper for OrbbecSDK that supports ROS Kinetic, Melodic, and Noetic distributions.
 It enables smooth integration of Orbbec 3D cameras into ROS projects.
@@ -444,6 +444,13 @@ The frame fps and resolution of IR must be consistent with the depth. The corres
 | gemini2L                                  | gemini2L.launch      |
 | gemini e                                  | gemini_e.launch      |
 | gemini e lite                             | gemini_e_lite.launch |
+| dabai max                                 | dabai_max.launch     |
+| dabai max pro                             | dabai_max_pro.launch |
+| gemini uw                                 | gemini_uw.launch     |
+| dabai dcw2                                | dabai_dcw2.launch    |
+| dabai dw2                                 | dabai_dw2.launch     |
+| gemini ew                                 | gemini_ew.launch     |
+| gemini ew lite                            | gemini_ew_lite.launch|
 
 Actually, All launch files all most the same, the only difference is the default value of the parameters.
 
@@ -472,6 +479,8 @@ For users who need to use nodelet, please refer to `gemini2_nodelet.launch`
 | Gemini E Lite     | 3606                                      |
 | Gemini            | 3.0.18                                    |
 | Astra Mini S Pro  | 1.0.05                                    |
+| DaBai Max Pro     | 1.0.06                                    |
+| Gemini UW         | 1.0.060                                   |
 
 ## Frequently Asked Questions
 
