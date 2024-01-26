@@ -201,9 +201,11 @@ void OBCameraNode::startStreams() {
     }
     try {
       setupPipelineConfig();
+      ROS_INFO_STREAM("XXX starting pipeline");
       pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
         CHECK_NOTNULL(frame_set.get());
         this->onNewFrameSetCallback(frame_set);
+        ROS_INFO_THROTTLE(1, "XXX got frame set");
       });
     } catch (const ob::Error& e) {
       ROS_ERROR_STREAM("failed to start pipeline: " << e.getMessage()
