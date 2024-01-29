@@ -205,7 +205,7 @@ void OBCameraNode::startStreams() {
       setupPipelineConfig();
       // ROS_INFO_STREAM("startStreams: Starting Pipeline");
       pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
-        ROS_INFO_STREAM("startStreams: In lambda function of starting piepline");
+        // ROS_INFO_STREAM("startStreams: In lambda function of starting piepline");
         CHECK_NOTNULL(frame_set.get());
         this->onNewFrameSetCallback(frame_set);
       });
@@ -216,7 +216,7 @@ void OBCameraNode::startStreams() {
       setupPipelineConfig();
       pipeline_->start(pipeline_config_, [this](const std::shared_ptr<ob::FrameSet>& frame_set) {
         CHECK_NOTNULL(frame_set.get());
-        ROS_INFO_STREAM("startStreams: In lambda function of starting piepline but in the catch block of trying again");
+        // ROS_INFO_STREAM("startStreams: In lambda function of starting piepline but in the catch block of trying again");
         this->onNewFrameSetCallback(frame_set);
       });
     } catch (...) {
@@ -895,7 +895,7 @@ std::shared_ptr<ob::Frame> OBCameraNode::decodeIRMJPGFrame(const std::shared_ptr
 }
 
 void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& frame_set) {
-  ROS_INFO_STREAM("Entering onNewFrameSetCallback");
+  // ROS_INFO_STREAM("Entering onNewFrameSetCallback");
   if (!is_running_) {
     ROS_INFO_STREAM("onNewFrameSetCallback: is_running_ is false, means the node is shutting down");
     // is_running_ is false means the node is shutting down
@@ -907,16 +907,16 @@ void OBCameraNode::onNewFrameSetCallback(const std::shared_ptr<ob::FrameSet>& fr
   }
   try {
     //rgb_is_decoded_ = decodeColorFrameToBuffer(frame_set->colorFrame(), rgb_buffer_);
-    ROS_INFO_STREAM("onNewFrameSetCallback: Recreate a thread to color frame data");
+    // ROS_INFO_STREAM("onNewFrameSetCallback: Recreate a thread to color frame data");
     std::shared_ptr<ob::ColorFrame> colorFrame = frame_set->colorFrame();
     if (enable_stream_[COLOR] && colorFrame){
-      ROS_INFO_STREAM("if color stream and colorFrame: onNewFrameSetCallback");
+      // ROS_INFO_STREAM("if color stream and colorFrame: onNewFrameSetCallback");
       std::lock_guard<std::mutex> colorLock(colorFrameMtx_);
       colorFrameQueue_.push(frame_set);
       colorFrameCV_.notify_all();
     }
     else {
-      ROS_INFO_STREAM("onNewFrameSetCallback: publishing point cloud");
+      // ROS_INFO_STREAM("onNewFrameSetCallback: publishing point cloud");
       publishPointCloud(frame_set);
     }
 
@@ -1142,10 +1142,6 @@ void OBCameraNode::saveImageToFile(const stream_index_pair& stream_index, const 
 
 void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index) {
   ROS_INFO_STREAM("calling imageSubscribedCallback - Subscribing");
-  if(!is_initialized_)
-  {
-    return;
-  }
   ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " subscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
@@ -1172,10 +1168,7 @@ void OBCameraNode::imageSubscribedCallback(const stream_index_pair& stream_index
 }
 
 void OBCameraNode::imuSubscribedCallback(const orbbec_camera::stream_index_pair& stream_index) {
-  if(!is_initialized_)
-  {
-    return;
-  }
+
   ROS_INFO_STREAM("IMU stream " << stream_name_[stream_index] << " subscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   try {
@@ -1203,10 +1196,7 @@ void OBCameraNode::imuSubscribedCallback(const orbbec_camera::stream_index_pair&
 
 void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_index) {
   ROS_INFO_STREAM("calling imageUnsubscribedCallback - Unsubscribing");
-  if(!is_initialized_)
-  {
-    return;
-  }
+
   ROS_INFO_STREAM("Image stream " << stream_name_[stream_index] << " unsubscribed");
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
   if (enable_pipeline_) {
@@ -1250,10 +1240,6 @@ void OBCameraNode::imageUnsubscribedCallback(const stream_index_pair& stream_ind
 }
 
 void OBCameraNode::imuUnsubscribedCallback(const stream_index_pair& stream_index) {
-  if(!is_initialized_)
-  {
-    return;
-  }
   if (enable_sync_output_accel_gyro_) {
     ROS_INFO_STREAM("IMU stream accel and gyro unsubscribed");
   } else {

@@ -248,10 +248,10 @@ void OBCameraNode::setupProfiles() {
 }
 
 void OBCameraNode::setupTopics() {
+  setupPublishers();
   if (publish_tf_) {
     publishStaticTransforms();
   }
-  setupPublishers();
 }
 
 void OBCameraNode::setupPublishers() {
