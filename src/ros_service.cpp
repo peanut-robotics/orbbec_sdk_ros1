@@ -770,7 +770,6 @@ bool OBCameraNode::rebootCameraCallback(std_srvs::EmptyRequest& request,
       return false;
     }
     device_->reboot();
-    device_.reset();
 
   } catch (const ob::Error& e) {
     std::string errorName = e.getName();
