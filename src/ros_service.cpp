@@ -764,18 +764,18 @@ bool OBCameraNode::rebootCameraCallback(std_srvs::EmptyRequest& request,
   (void)request;
   (void)response;
   std::lock_guard<decltype(device_lock_)> lock(device_lock_);
+
   try {
     if (!device_) {
       ROS_ERROR_STREAM("Camera is not connected.");
       return false;
     }
     device_->reboot();
-
   } catch (const ob::Error& e) {
     std::string errorName = e.getName();
     // Check if the error is the expected "reboot" error
     if (errorName.find("reboot") != std::string::npos) {
-      ROS_INFO_STREAM("Reboot process initiated");
+      ROS_INFO_STREAM("Reboot process failed " << e.getMessage() << " " << e.getName() << " " << e.getExceptionType());
     } else {
       ROS_ERROR_STREAM("Failed to reboot camera: " << e.getMessage() << " " << e.getName());
       return false;
