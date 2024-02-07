@@ -776,6 +776,7 @@ bool OBCameraNode::rebootCameraCallback(std_srvs::EmptyRequest& request,
     // Check if the error is the expected "reboot" error
     if (errorName.find("reboot") != std::string::npos) {
       ROS_INFO_STREAM("Reboot process failed " << e.getMessage() << " " << e.getName() << " " << e.getExceptionType());
+      return false;
     } else {
       ROS_ERROR_STREAM("Failed to reboot camera: " << e.getMessage() << " " << e.getName());
       return false;
