@@ -16,7 +16,7 @@
 			"NoiseRemovalFilter": {
 				"enable": true,
 				"size": 50,
-				"disp_diff": 12,
+				"disp_diff": 10,
 				"type": "NR_LUT",
 				"lut": [
 					100, 25, 25, 100,
